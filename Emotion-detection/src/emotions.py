@@ -86,6 +86,44 @@ model.add(Dense(1024, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(7, activation='softmax'))
 
+
+# Function called by serve once file is received from user POST request
+def process_sentiment(fileName, file=None):
+    # Create a VideoCapture object and read from file input
+    cap = cv2.VideoCapture(fileName)
+    print('create videocapture object')
+    # Check if camera opened successfully
+    if (cap.isOpened()== False):
+        print("Error opening video file")
+    
+    # Read until video is completed
+    while(cap.isOpened()):
+        
+    # Capture frame-by-frame
+        ret, frame = cap.read()
+        if ret == True:
+        # Display the resulting frame     /// AKA apply model to frame
+            cv2.imshow('Frame', frame)
+            
+        # Press Q on keyboard to exit
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                break
+    
+    # Break the loop
+        else:
+            break
+    
+    # When everything done, release
+    # the video capture object
+    cap.release()
+    
+    # Closes all the frames
+    cv2.destroyAllWindows()
+
+
+""" MAIN PROGRAM FOUND BELOW - mode=='upload' is for the file upload"""
+
+
 # If you want to train the same model or try other models, go for this
 if mode == "train":
     model.compile(loss='categorical_crossentropy',optimizer=Adam(lr=0.0001, decay=1e-6),metrics=['accuracy'])
@@ -133,3 +171,9 @@ elif mode == "display":
 
     cap.release()
     cv2.destroyAllWindows()
+
+elif mode=="upload":
+    print('Mode works for upload')
+    process_sentiment("test_video.mov")
+
+
