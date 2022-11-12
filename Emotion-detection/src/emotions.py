@@ -91,6 +91,12 @@ model.add(Dense(7, activation='softmax'))
 def process_sentiment(fileName, file=None):
     # Create a VideoCapture object and read from file input
     cap = cv2.VideoCapture(fileName)
+    fps = cap.get(cv2.CAP_PROP_FPS) # gets fps
+
+    number_of_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) #gets no of frames
+
+    length_of_video = number_of_frames/fps #gets length
+
     print('create videocapture object')
     # Check if camera opened successfully
     if (cap.isOpened()== False):
@@ -102,6 +108,7 @@ def process_sentiment(fileName, file=None):
     # Capture frame-by-frame
         ret, frame = cap.read()
         if ret == True:
+            print("working")
         # Display the resulting frame     /// AKA apply model to frame
             cv2.imshow('Frame', frame)
             
@@ -147,11 +154,14 @@ elif mode == "display":
     emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
 
     # start the webcam feed
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture("/Users/tejasanand/Prepresent-Backend/Emotion-detection/src/test-assets/test_video.mp4")
+
     while True:
         # Find haar cascade to draw bounding box around face
         ret, frame = cap.read()
+
         if not ret:
+            # print("Can't receive frame (stream end?). Exiting ...")
             break
         facecasc = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -174,6 +184,7 @@ elif mode == "display":
 
 elif mode=="upload":
     print('Mode works for upload')
-    process_sentiment("test_video.mov")
+    process_sentiment("/Users/tejasanand/Prepresent-Backend/Emotion-detection/src/test-assets/test_video.mp4")
+
 
 
