@@ -1,2 +1,4 @@
-**/test-assets
+**/test_assets
 **/.venv
+*.pyc
+*.rb

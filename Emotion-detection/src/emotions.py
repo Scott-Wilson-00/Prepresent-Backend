@@ -8,6 +8,7 @@ from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import MaxPooling2D
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from test_assets import asset_paths
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -97,7 +98,6 @@ def process_sentiment(fileName, file=None):
 
     length_of_video = number_of_frames/fps #gets length
 
-    print('create videocapture object')
     # Check if camera opened successfully
     if (cap.isOpened()== False):
         print("Error opening video file")
@@ -108,7 +108,6 @@ def process_sentiment(fileName, file=None):
     # Capture frame-by-frame
         ret, frame = cap.read()
         if ret == True:
-            print("working")
         # Display the resulting frame     /// AKA apply model to frame
             cv2.imshow('Frame', frame)
             
@@ -154,7 +153,7 @@ elif mode == "display":
     emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
 
     # start the webcam feed
-    cap = cv2.VideoCapture("/Users/tejasanand/Prepresent-Backend/Emotion-detection/src/test-assets/test_video.mp4")
+    cap = cv2.VideoCapture(0)
 
     while True:
         # Find haar cascade to draw bounding box around face
@@ -183,8 +182,7 @@ elif mode == "display":
     cv2.destroyAllWindows()
 
 elif mode=="upload":
-    print('Mode works for upload')
-    process_sentiment("/Users/tejasanand/Prepresent-Backend/Emotion-detection/src/test-assets/test_video.mp4")
+    process_sentiment(asset_paths.vid1)
 
 
 
