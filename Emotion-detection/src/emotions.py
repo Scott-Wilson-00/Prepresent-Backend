@@ -98,6 +98,9 @@ def process_sentiment(fileName, file=None):
 
     length_of_video = number_of_frames/fps #gets length
 
+    emotion_dict = {0: ["Angry", 0], 1: ["Disgusted", 0], 2: ["Fearful", 0], 3: ["Happy", 0], 
+                    4: ["Neutral", 0], 5: ["Sad", 0], 6: ["Surprised", 0]}
+
     # Check if camera opened successfully
     if (cap.isOpened()== False):
         print("Error opening video file")
@@ -107,16 +110,29 @@ def process_sentiment(fileName, file=None):
         
     # Capture frame-by-frame
         ret, frame = cap.read()
-        if ret == True:
+        if not ret:
+            #print("Can't receive frame (stream end?). Exiting ...")
+            break
+
+        facecasc = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = facecasc.detectMultiScale(gray,scaleFactor=1.3, minNeighbors=5)
+
+        for (x, y, w, h) in faces:
+            cv2.rectangle(frame, (x, y-50), (x+w, y+h+10), (255, 0, 0), 2)
+            roi_gray = gray[y:y + h, x:x + w]
+            cropped_img = np.expand_dims(np.expand_dims(cv2.resize(roi_gray, (48, 48)), -1), 0)
+            prediction = model.predict(cropped_img)
+            maxindex = int(np.argmax(prediction))
+            cv2.putText(frame, emotion_dict[maxindex][0], (x+20, y-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+
+            emotion_dict[maxindex][1] += 1
+
         # Display the resulting frame     /// AKA apply model to frame
-            cv2.imshow('Frame', frame)
+        cv2.imshow('Frame', frame)
             
-        # Press Q on keyboard to exit
-            if cv2.waitKey(25) & 0xFF == ord('q'):
-                break
-    
-    # Break the loop
-        else:
+        # Press Q on keyboard to exit // Should be taken out
+        if cv2.waitKey(25) & 0xFF == ord('q'):
             break
     
     # When everything done, release
@@ -125,6 +141,9 @@ def process_sentiment(fileName, file=None):
     
     # Closes all the frames
     cv2.destroyAllWindows()
+
+    for key in range(len(emotion_dict)):
+        print(emotion_dict[key])
 
 
 """ MAIN PROGRAM FOUND BELOW - mode=='upload' is for the file upload"""
