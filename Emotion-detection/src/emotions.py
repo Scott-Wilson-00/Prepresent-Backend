@@ -10,6 +10,8 @@ from tensorflow.keras.layers import MaxPooling2D
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from test_assets import asset_paths
 import os
+import json
+import ffmpeg 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # command line argument
@@ -88,7 +90,27 @@ model.add(Dropout(0.5))
 model.add(Dense(7, activation='softmax'))
 
 
-# Function called by serve once file is received from user POST request
+# Fixing rotation issues
+def check_rotation(path_video_file):
+     # this returns meta-data of the video file in form of a dictionary
+     meta_dict = ffmpeg.probe(path_video_file)
+
+     # from the dictionary, meta_dict['streams'][0]['tags']['rotate'] is the key
+     # we are looking for
+     rotateCode = None
+     if int(meta_dict['streams'][0]["side_data_list"][0]['rotation']) == -90:
+         rotateCode = cv2.ROTATE_90_CLOCKWISE
+     elif int(meta_dict['streams'][0]["side_data_list"][0]['rotation']) == 180:
+         rotateCode = cv2.ROTATE_180
+     elif int(meta_dict['streams'][0]["side_data_list"][0]['rotation']) == 270:
+         rotateCode = cv2.ROTATE_90_COUNTERCLOCKWISE
+
+     return rotateCode
+
+def correct_rotation(frame, rotateCode):  
+     return cv2.rotate(frame, rotateCode) 
+
+# Function called by server once file is received from user POST request
 def process_sentiment(fileName, file=None):
     # Create a VideoCapture object and read from file input
     cap = cv2.VideoCapture(fileName)
@@ -100,6 +122,9 @@ def process_sentiment(fileName, file=None):
 
     emotion_dict = {0: ["Angry", 0], 1: ["Disgusted", 0], 2: ["Fearful", 0], 3: ["Happy", 0], 
                     4: ["Neutral", 0], 5: ["Sad", 0], 6: ["Surprised", 0]}
+
+    # check if video requires rotation
+    rotateCode = check_rotation(fileName)
 
     # Check if camera opened successfully
     if (cap.isOpened()== False):
@@ -113,6 +138,10 @@ def process_sentiment(fileName, file=None):
         if not ret:
             #print("Can't receive frame (stream end?). Exiting ...")
             break
+
+    # check if the frame needs to be rotated
+        if rotateCode is not None:
+            frame = correct_rotation(frame, rotateCode)
 
         facecasc = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -201,6 +230,7 @@ elif mode == "display":
     cv2.destroyAllWindows()
 
 elif mode=="upload":
+    #check_rotation(asset_paths.vid1)
     process_sentiment(asset_paths.vid1)
 
 
