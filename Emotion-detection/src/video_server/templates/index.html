@@ -10,6 +10,18 @@
 <style>
 body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
 .w3-bar,h1,button {font-family: "Montserrat", sans-serif}
+.column {
+  flex: 50%;
+  padding: 10px;
+  height: 300px; /* Should be removed. Only for demonstration */
+}
+* {
+  box-sizing: border-box;
+}
+
+.row {
+  display: flex;
+}
 </style>
 </head>
 <body>
@@ -18,8 +30,13 @@ body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
 <div class="w3-top">
   <div class="w3-bar w3-red w3-card w3-left-align w3-large">
     <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-white w3-large w3-red" href="javascript:void(0);" onclick="myFunction()" title="Toggle Navigation Menu"><i class="fa fa-bars"></i></a>
+    {% if emotions %}
+    <a href="/" class="w3-bar-item w3-button w3-padding-large w3-red">Home</a>
+    <a href="#" class="w3-bar-item w3-button w3-hide-small w3-white w3-padding-large w3-hover-white">Analytics</a>
+    {% else %}
     <a href="/" class="w3-bar-item w3-button w3-padding-large w3-white">Home</a>
     <a href="#" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">Analytics</a>
+    {% endif %}
   </div>
 
   <!-- Navbar on small screens -->
@@ -32,8 +49,15 @@ body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
 <!-- Header -->
 <header class="w3-container w3-red w3-center" style="padding:128px 16px">
   <h1 class="w3-margin w3-jumbo">Welcome to Prepresent!</h1>
-  <form action="/action_page.php">
-  <button type="file" id="vid" name="vid" accept="video/*" class="w3-button w3-black w3-padding-large w3-large w3-margin-top">Begin Presenting</button>
+
+
+  
+    {% if presenting %}
+    <button type="file" id="vid" onclick="stop_presenting()" name="vid" style="margin-bottom: 20px;" class="w3-button w3-black w3-padding-large w3-large w3-margin-top">Stop Presenting</button>
+    <img src="{{ url_for('present')}}" width="100%"/>
+    {% else %}
+    <button type="file" id="vid" onclick="begin_presenting()" name="vid" class="w3-button w3-black w3-padding-large w3-large w3-margin-top">Begin Presenting</button>
+    {% endif %}
 </form>
 </header>
 
@@ -41,10 +65,25 @@ body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
 <div class="w3-row-padding w3-padding-64 w3-container">
   <div class="w3-content">
     <div class="w3-twothird">
-      <h1>About Project Prepresent</h1>
-      <h5 class="w3-padding-32">Artificial Intelligence smart software which provides real-time data analysis of your presentation. It gives you feedback on how to improve your communication skills and inspire your audience!</h5>
     </div>
-
+    {% if emotions %}
+      <h1>Sentiment Analytics</h1>
+      <div class="row">
+        <div class="column" ">
+          <h3>Neutral: {{neutral}}%</h3>
+          <h3>Happy: {{happy}}%</h3>
+          <h3>Surprised: {{surprised}}%</h3>
+        </div>
+        <div class="column"">
+          <h3>Fearful: {{fearful}}%</h3>
+          <h3>Angry: {{angry}}%</h3>
+          <h3>Sad: {{sad}}%</h3>
+        </div>
+      </div>
+    {% else %}
+    <h1>About Project Prepresent</h1>
+      <h5 class="w3-padding-32">Artificial Intelligence smart software which provides real-time data analysis of your presentation. It gives you feedback on how to improve your communication skills and inspire your audience!</h5>
+    {% endif %}
     <div class="w3-third w3-center">
     </div>
   </div>
@@ -56,4 +95,5 @@ body,h1,h2,h3,h4,h5,h6 {font-family: "Lato", sans-serif}
  <p>Produced by BIG PP</p>
 </footer>
 
-<script>
+
+<script src="../static/index.js"></script>

@@ -12,9 +12,6 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import os
 import json
 import ffmpeg 
-from decimal import Decimal, getcontext
-getcontext().prec = 2
-
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # command line argument
@@ -74,27 +71,23 @@ def plot_model_history(model_history):
 #         class_mode='categorical')
 
 # Create the model
-def initialize():
-    model = Sequential()
+model = Sequential()
 
-    model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
-    model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
+model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(48,48,1)))
+model.add(Conv2D(64, kernel_size=(3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
 
-    model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
+model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(128, kernel_size=(3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
 
-    model.add(Flatten())
-    model.add(Dense(1024, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(7, activation='softmax'))
-
-    model.load_weights('src/model.h5')
-    return model
+model.add(Flatten())
+model.add(Dense(1024, activation='relu'))
+model.add(Dropout(0.5))
+model.add(Dense(7, activation='softmax'))
 
 """
 # Function called by server once file is received from user POST request
@@ -158,63 +151,16 @@ def process_sentiment(fileName, file=None):
 
 """ MAIN PROGRAM FOUND BELOW - mode=='upload' is for the file upload"""
 
-emotion_dict = {0: ["Angry", 0], 1: ["Disgusted", 0], 2: ["Fearful", 0], 3: ["Happy", 0], 
-                    4: ["Neutral", 0], 5: ["Sad", 0], 6: ["Surprised", 0]}
-
-def calculate_emotions():
-    emotions = get_emotions()
-    totalFrames = 0
-    for key in emotions:
-        totalFrames += emotions[key][1]
-
-    txt = "{val:.1f}"
-
-    anger = emotions[0][1] / totalFrames * 100
-    disgust = emotions[1][1] / totalFrames * 100
-    fear = emotions[2][1] / totalFrames * 100
-    happiness = emotions[3][1] / totalFrames * 100
-    neutral = emotions[4][1] / totalFrames * 100
-    sadness = emotions[5][1] / totalFrames * 100
-    suprise = emotions[6][1] / totalFrames * 100
-
-    anger = txt.format(val = anger)
-    disgust = txt.format(val = disgust)
-    fear = txt.format(val = fear)
-    happiness = txt.format(val = happiness)
-    neutral = txt.format(val = neutral)
-    sadness = txt.format(val = sadness)
-    suprise = txt.format(val = suprise)
-
-    percentages = { "Angry": anger, 
-                    "Disgusted": disgust,
-                    "Fearful": fear, 
-                    "Happy": happiness,
-                    "Neutral": neutral , 
-                    "Sad": sadness,
-                    "Surprised": suprise 
-                    }
-
-    return percentages
-
-
-def get_emotions():
-    global emotion_dict
-    res = emotion_dict.copy()
-    emotion_dict = {0: ["Angry", 0], 1: ["Disgusted", 0], 2: ["Fearful", 0], 3: ["Happy", 0], 
-                    4: ["Neutral", 0], 5: ["Sad", 0], 6: ["Surprised", 0]}
-    return res
-
 def process_sentiment():
-    # model.load_weights('./model.h5')
-    model = initialize()
-
+    model.load_weights('model.h5')
 
     # prevents openCL usage and unnecessary logging messages
     cv2.ocl.setUseOpenCL(False)
 
     # dictionary which assigns each label an emotion (alphabetical order)
     #emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
-    global emotion_dict
+    emotion_dict = {0: ["Angry", 0], 1: ["Disgusted", 0], 2: ["Fearful", 0], 3: ["Happy", 0], 
+                    4: ["Neutral", 0], 5: ["Sad", 0], 6: ["Surprised", 0]}
 
     # start the webcam feed
     cap = cv2.VideoCapture(0)
@@ -225,10 +171,9 @@ def process_sentiment():
 
         if not ret:
             # Doesn't recieve frame, so ends stream
-            print("doesn't receive it")
             break
 
-        facecasc = cv2.CascadeClassifier('src/haarcascade_frontalface_default.xml')
+        facecasc = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         faces = facecasc.detectMultiScale(gray,scaleFactor=1.3, minNeighbors=5)
 
@@ -246,14 +191,9 @@ def process_sentiment():
             cv2.putText(frame, emotion_dict[maxindex][0], (x+20, y-60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
 
             # Updates the number of frames of the predicted sentiment
-
             emotion_dict[maxindex][1] += 1
 
-        # cv2.imshow('Video', cv2.resize(frame,(1600,960),interpolation = cv2.INTER_CUBIC))
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-        yield(b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        cv2.imshow('Video', cv2.resize(frame,(1600,960),interpolation = cv2.INTER_CUBIC))
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
@@ -261,12 +201,9 @@ def process_sentiment():
     cv2.destroyAllWindows()
 
     print(emotion_dict)
-    return "hello"
 
 # If you want to train the same model or try other models, go for this
 if mode == "train":
-    model = initialize()
-
     model.compile(loss='categorical_crossentropy',optimizer=Adam(lr=0.0001, decay=1e-6),metrics=['accuracy'])
     model_info = model.fit_generator(
             train_generator,
